@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %} 详情 {% endblock %}
+
+{% block content %}
+    <div class="container my-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'book_list' %}">所有图书</a></li>
+            <li class="breadcrumb-item">详细 - {{ books.title }}</li>
+        </ol>
+    </div>
+
+    <div class="container my-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+
+    <div class="text-center">
+          <img src="{{ books.image.url }}" class="rounded" alt="Book Image">
+    </div>
+
+    <br/>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>书名:</strong> {{ books.title }}</li>
+                    <li class="list-group-item"><strong>作者:</strong> {{ books.author }}</li>
+                    <li class="list-group-item"><strong>分类:</strong> {{ books.genre }}</li>
+                    <li class="list-group-item"><strong>语言:</strong> {{ books.language }}</li>
+                    <li class="list-group-item"><strong>描述:</strong> <br/><br/>{{ books.description|linebreaksbr }}</li>
+                    <li class="list-group-item"><strong>出版社:</strong> {{ books.publication }}</li>
+                    <li class="list-group-item"><strong>价格:</strong> {{ books.price }} {% if books.sale_way %}  元/天 {% else %}  元 {% endif %}</li>
+                    <li class="list-group-item"><strong>卖家: </strong> <a href="{% url 'user_books' books.created_by.username %}">{{ books.created_by }}</a></li>
+                    <li class="list-group-item"><strong>联系方式: </strong> {{ books.contact_number }}</li>
+                    <li class="list-group-item"><strong>藏书位置: </strong> {% if books.book_locate %}  老校区 {% else %}  新校区 {% endif %}</li>
+                    <li class="list-group-item"><strong>方式: </strong> {% if books.sale_way %}  出租 {% else %}  出售 {% endif %}</li>
+                </ul>
+            </div>
+        </div>
+
+        <br/>
+
+        <p>推荐视频</p>
+        {% if books.videos != "#" %}
+        <div class="embed-responsive embed-responsive-16by9">
+            {{ books.videos|safe }}
+        </div>
+        {% endif %}
+
+    </div>
+
+
+
+    {% if books.created_by == user %}
+    <div class="container mt-3 mb-3">
+        <div class="row top-buffer">
+            <div class="col-12">
+                <a href="{% url 'book_update' books.pk %}"><button class="btn btn-outline-success mx-2">编辑</button></a>
+                <a href="{% url 'book_delete' books.pk %}"><button class="btn btn-outline-danger">删除</button></a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
+
+<article class="container my-3">
+      <div class="card-body">
+        <!-- comments -->
+        <legend class="border-bottom mb-4">{{ comments.count }} 条评论 </legend>
+
+        {% for comment in comments %}
+          {% if not comment.reply %}
+        <div class="comments" style="padding: 10px;">
+
+              <p class="font-weight-bold" href="#">
+                  <img class="rounded-circle" src="{{ books.image.url }}" style="height: 45px; width: 45px;">
+                        {{ comment.author.username }}
+
+                <span class=" text-muted font-weight-normal">
+                  {{ comment.created_on }}
+                    {% if user.is_authenticated %}
+                    <a class="" data-toggle="collapse" href="#collapseExample_{{ comment.id }}" role="button" aria-expanded="false" aria-controls="collapseExample">
+                        回复
+                    </a>
+                    {% endif %}
+                </span>
+              </p>
+                <div class="mr-2">
+                    {{ comment.body | linebreaks }}
+                </div>
+
+            </div>
+
+
+
+        <div class="collapse" id="collapseExample_{{ comment.id }}">
+                  <div class="container my-3">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                        <fieldset class="form-group">
+                            <legend class="border-bottom mb-4">评论</legend>
+                            {{ comment_form|crispy }}
+                        </fieldset>
+                        <div class="form-group">
+                            <button class="btn btn-outline-info" type="submit">提交</button>
+                        </div>
+                    </form>
+                </div>
+        </div>
+
+          <div class="container mt-2">
+              {% for reply in comment.replies.all %}
+                <div class="comments" style="padding: 10px;">
+                  <p class="font-weight-bold" href="#">
+                    {{ reply.author.username }}
+                    <span class=" text-muted font-weight-normal">
+                      {{ reply.created_on }}
+                    </span>
+                  </p>
+                  {{ reply.body | linebreaks }}
+                </div>
+              {% endfor %}
+          </div>
+
+          {% endif %}
+
+        {% endfor %}
+      </div>
+  </article>
+
+
+
+{% if user.is_authenticated %}
+    <div class="container my-3">
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">评论</legend>
+                {{ comment_form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">提交</button>
+            </div>
+        </form>
+    </div>
+{% else %}
+    <div class="container my-3">
+        <p>请先<a href="{% url 'login' %}?next={% url 'book_detail' books.pk %}">登录</a>后方可评论.</p>
+    </div>
+{% endif %}
+
+
+
+{% endblock %}

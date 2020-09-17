@@ -18,9 +18,9 @@
 
 
 #### 软件架构
-主要使用Django书写
-前端主要使用bootstrap4
-数据库使用的是mysql
+主要使用Django书写   
+前端主要使用bootstrap4   
+数据库使用的是mysql   
 
 
 #### 安装教程
